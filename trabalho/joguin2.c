@@ -76,12 +76,13 @@ void FimAtaque (int id, int idAlvo) {
 void IniciaDefesa (int id) {
     pthread_mutex_lock(&mutex);
     printf("D[%d] quer defender\n", id);
-    while((atacando>0) || (defendendo>0)) {
-        printf("D[%d] bloqueou\n", id);
-        pthread_cond_wait(&cond_defesa, &mutex);
-        printf("D[%d] desbloqueou\n", id);
-    }
+    // while((atacando>0) || (defendendo>0)) {
+    //     printf("D[%d] bloqueou\n", id);
+    //     pthread_cond_wait(&cond_defesa, &mutex);
+    //     printf("D[%d] desbloqueou\n", id);
+    // }
     defendendo++;
+    estado[id] = 2;
     pthread_mutex_unlock(&mutex);
 }
 
@@ -90,6 +91,7 @@ void FimDefesa (int id) {
     pthread_mutex_lock(&mutex);
     printf("D[%d] terminou de defender\n", id);
     defendendo--;
+    estado[id] = 0;
     pthread_cond_signal(&cond_defesa);
     pthread_cond_broadcast(&cond_ataque);
     pthread_mutex_unlock(&mutex);
