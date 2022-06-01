@@ -41,6 +41,12 @@ struct Jogador {
     int dano;
 };
 
+// cria a struct a ser passada para as threads: a lista de jogadores mais o jogador a que a thread pertence
+struct Passa {
+    struct Jogador *jogs;
+    int *id_jogador;
+};
+
 // variaveis para sincronizacao
 pthread_mutex_t mutex;
 pthread_cond_t conds[P];
@@ -107,8 +113,9 @@ void FimDefesa (int id) {
 
 // thread de ataque
 void * atacante (void * arg) {
-    struct Jogador *jogador = (struct Jogador *) arg;
-    int id_jogador = jogador->id_jogador; //(int)(floor((float)*id_thread/(float)A)) + 1; //id_threadA = (j * A) + i -> j = (id_threadA - i) / A -> id_jogador = floor(id_threadA / A)
+    struct Passa *passado = (struct Passa *) arg;
+    struct Jogador jogadores = *passado->jogs;
+    int id_jogador = *passado->id_jogador; //(int)(floor((float)*id_thread/(float)A)) + 1; //id_threadA = (j * A) + i -> j = (id_threadA - i) / A -> id_jogador = floor(id_threadA / A)
     int vaiAtacar = 0;
     while(1) {
         // escolhendo o alvo
@@ -132,7 +139,7 @@ void * atacante (void * arg) {
 
             sleep(0.25); // tempo para realizar o ataque
             if (estado[idAlvo] == 1 || estado[idAlvo] == 2) {
-                printf("ATAQUE BEM SUCEDIDO - Jogador %d inflingiu %d de dano ao jogador %d\n", id_jogador, jogador->dano, idAlvo);
+                printf("ATAQUE BEM SUCEDIDO - Jogador %d inflingiu %d de dano ao jogador %d\n", id_jogador, *passado.jogs[id_jogador]->dano, idAlvo);
                 // FALTA REALMENTE TIRAR A VIDA DOS JOGADORES E MATAR ELES QUANDO A VIDA CHEGAR A 0
             }
             if (estado[idAlvo] == 2 || estado[idAlvo] == 3) {
@@ -152,8 +159,9 @@ void * atacante (void * arg) {
 
 // thread de defesa
 void * defensor (void * arg) {
-    struct Jogador *jogador = (struct Jogador *) arg;
-    int id_jogador = jogador->id_jogador; // (int)(floor((float)*id_thread/(float)D)) + 1; //id_threadD = (j * D) + i -> j = (id_threadD - i) / D -> id_jogador = floor(id_threadD / D)
+    struct Passa *passado = (struct Passa *) arg;
+    struct Jogador jogadores = *passado->jogs;
+    int id_jogador = *passado->id_jogador; // (int)(floor((float)*id_thread/(float)D)) + 1; //id_threadD = (j * D) + i -> j = (id_threadD - i) / D -> id_jogador = floor(id_threadD / D)
     while(1) {
         IniciaDefesa(id_jogador);
         printf("Jogador %d esta defendendo\n", id_jogador);
@@ -189,11 +197,18 @@ int main(void) {
         printf("Jogador %d criado com %d de vida e %d de dano\n", i, lista_jogs[i].vida, lista_jogs[i].dano);
     }
 
+    struct Passa passa;
+    passa.jogs = lista_jogs;
+    // for (int i=0; i<P; i++){
+    //     passa.jogs.jogador = lista_jogs[i];
+    // }
+
     // cria as threads atacantes
     for(int j=0; j < P; j++) {
         for(int i=0; i < A; i++) {
             id[(j * A) + i] = (j * A) + i + 1;
-            if(pthread_create(&tid[(j * A) + i], NULL, atacante, (void *) &lista_jogs[j])) exit(-1);
+            passa.id_jogador = (int)(floor((float)((j * A) + i)/(float)A));
+            if(pthread_create(&tid[(j * A) + i], NULL, atacante, (void *) &passa)) exit(-1);
             printf("Thread atacante %d criada\n", (j * A) + i);
         } 
     }
@@ -202,7 +217,8 @@ int main(void) {
     for(int j=0; j < P; j++) {
         for(int i=0; i < D; i++) {
             id[(A * P) - 1 + (j * D) + i ] = (A * P) + (j * D) + i ;
-            if(pthread_create(&tid[(A * P) - 1 + (j * D) + i], NULL, defensor, (void *) &lista_jogs[j])) exit(-1);
+            passa.id_jogador = (int)(floor((float)((j * A) + i)/(float)A));
+            if(pthread_create(&tid[(A * P) - 1 + (j * D) + i], NULL, defensor, (void *) &passa)) exit(-1);
             printf("Thread defensora %d criada\n", (A * P) - 1 + (j * D) + i);
         }
     }
