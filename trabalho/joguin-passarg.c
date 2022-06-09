@@ -6,11 +6,16 @@
 #include<math.h>
 
 /*
-PROBLEMAS ATUAIS:
-    - Os conds não estão funcionando da forma que eu queria, acho que um cond só controla um tipo de thread, tenho que entender se um cond pode valer para
-    algumas threads específicas uma de cada tipo como eu quero
-    - Por isso não consigo fazer com que todas as threads de fato iniciem ao mesmo tempo e acho que os waits e signals estão todos errados 
-PRÓXIMOS PASSOS - CRIAR TODAS AS THREADS DEPOIS INICIAR TODAS AS THREADS
+NOTAS SILVANA:
+    - sempre se ligar em quando as threads estão lendo informações globais para não haver problema de corrida
+    - ver se uma thread não está alterando algo de outra thread
+    - ter bem definidas as situações em que uma thread se bloqueia
+    - se ligar nas condições para as threads se bloquearem e só der signal quando de fato as condições mudarem
+    - pensar que o signal sinaliza a thread independente da condição que foi usada para entrar no wait
+
+PRÓXIMOS PASSOS
+    - CRIAR TODAS AS THREADS DEPOIS INICIAR TODAS AS THREADS
+    - implementar melhor a morte
 */
 
 /*               -- REGRAS DO JOGO --
@@ -34,8 +39,8 @@ PRÓXIMOS PASSOS - CRIAR TODAS AS THREADS DEPOIS INICIAR TODAS AS THREADS
 
 int espera = 0; // controle para as threads não começarem uma de cada vez
 
-int vida_minima = 25;
-int vida_maxima = 100; // minimo 25 maximo 99
+int vida_minima = 25; // minimo 25
+int vida_maxima = 100; // maximo 99
 int dano_minimo = 10;
 int dano_maximo = 50; // minimo 10 maximo 49
 
@@ -169,7 +174,7 @@ void * atacante (void * arg) {
             printf("Jogador %d esta atacando o jogador %d\n", id_jogador, idAlvo);
 
             sleep(0.25); // tempo para realizar o ataque
-            if (estado[idAlvo] == 1 || estado[idAlvo] == 2) {
+            if (estado[idAlvo] == 0 || estado[idAlvo] == 1) {
                 printf("ATAQUE BEM SUCEDIDO - Jogador %d inflingiu %d de dano ao jogador %d\n", id_jogador, jogadores[id_jogador].dano, idAlvo);
                 jogadores[idAlvo].vida -= jogadores[id_jogador].dano;
                 printf("Vida do Jogador %d: %d/%d\n", idAlvo, jogadores[idAlvo].vida, vida_maxima);
