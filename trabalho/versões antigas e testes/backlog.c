@@ -44,3 +44,47 @@
 //     pthread_cond_wait(&cond_defesa, &mutex);
 //     printf("D[%d] desbloqueou\n", id);
 // }
+
+// struct Jogador* lista_jogs[P] = malloc(sizeof(struct Jogador) * P);
+//     struct Passa* passa = malloc(sizeof(struct Passa));
+
+//     // cria os jogadores e seus status
+//     printf("Criando os jogadores e seus status\n");
+//     srand(time(NULL));
+//     // struct Jogador lista_jogs[P];
+//     for(int i=0; i<P; i++){
+//         *lista_jogs[i].id_jogador = i;
+//         *lista_jogs[i].vida = rand() % vida_maxima;
+//         *lista_jogs[i].dano = rand() % dano_maximo;
+//         printf("Jogador %d criado com %d de vida e %d de dano\n", i, lista_jogs[i].vida, lista_jogs[i].dano);
+//     }
+
+//     // struct Passa passa;
+//     passa->jogs = lista_jogs;
+//     // for (int i=0; i<P; i++){
+//     //     passa.jogs.jogador = lista_jogs[i];
+//     // }
+
+//     // cria as threads atacantes
+//     for(int j=0; j < P; j++) {
+//         for(int i=0; i < A; i++) {
+//             id[(j * A) + i] = (j * A) + i + 1;
+//             passa->id_jogador = j;
+//             if(pthread_create(&tid[(j * A) + i], NULL, atacante, (void *) &passa)) exit(-1);
+//             printf("Thread atacante %d criada\n", (j * A) + i);
+//         } 
+//     }
+
+//     // cria as threads defensoras
+//     for(int j=0; j < P; j++) {
+//         for(int i=0; i < D; i++) {
+//             id[(A * P) - 1 + (j * D) + i ] = (A * P) + (j * D) + i ;
+//             passa->id_jogador = j;
+//             if(pthread_create(&tid[(A * P) - 1 + (j * D) + i], NULL, defensor, (void *) &passa)) exit(-1);
+//             printf("Thread defensora %d criada\n", (A * P) - 1 + (j * D) + i);
+//         }
+//     }
+
+//     pthread_exit(NULL);
+//     return 0;
+// }
