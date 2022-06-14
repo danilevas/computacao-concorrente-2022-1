@@ -13,12 +13,18 @@ NOTAS SILVANA
     - se ligar nas condições para as threads se bloquearem e só der signal quando de fato as condições mudarem
     - pensar que o signal sinaliza a thread independente da condição que foi usada para entrar no wait
 
+ERROS ATUAIS
+    ATAQUE BEM SUCEDIDO - Jogador 1 inflingiu 48 de dano ao jogador 3
+    Vida do Jogador 3: -22/100
+    ATAQUE BEM SUCEDIDO - Jogador 4 inflingiu 15 de dano ao jogador 3
+    Vida do Jogador 3: -37/100
+    MORTE - Jogador 4 matou o jogador 3
+    MORTE - Jogador 1 matou o jogador 3
+
 PRÓXIMOS PASSOS
-    - ajeitar o erro do jogador que ataca o que já está sendo atacado por 2
-    - entender porque a vida tá sendo diminuída errado quando o ataque é bem sucedido
-    - entender porque certos prints se repetem:
+    - ajeitar o erro do jogador que ataca o que já está sendo atacado por 2 e que ataca quem tá morto
+    - entender porque certos prints se repetem
     - implementar melhor a morte
-    - 
 
 *REGRAS DO JOGO*
     - As threads são ações: ATAQUE / DEFESA / ESQUIVA? / DESARME?
@@ -58,7 +64,6 @@ struct Jogador {
 
 // cria a struct a ser passada para as threads: a lista de jogadores mais o jogador a que a thread pertence e o id da thread
 struct Passa {
-    struct Jogador *jogs;
     int id_jogador;
     int id_thread;
 };
@@ -66,6 +71,8 @@ struct Passa {
 // variaveis para sincronizacao
 pthread_mutex_t mutex;
 pthread_cond_t conds[P];
+
+struct Jogador lista_jogs[P]; // lista global de jogadores
 
 int IniciaAtaque (int id_jogador, int id_thread) {
     pthread_mutex_lock(&mutex);
@@ -116,27 +123,28 @@ int IniciaAtaque (int id_jogador, int id_thread) {
     return idAlvo;
 }
 
-void ExecutaAtaque (int id_jogador, int idAlvo, int dano_ataque, int vida_alvo) {
+void ExecutaAtaque (int id_jogador, int idAlvo) {
     sleep(0.25); // tempo para realizar o ataque
 
-    if (estado[idAlvo] == 0 || estado[idAlvo] == 1) {
-        printf("ATAQUE BEM SUCEDIDO - Jogador %d inflingiu %d de dano ao jogador %d\n", id_jogador, dano_ataque, idAlvo);
-        vida_alvo -= dano_ataque;
-        printf("Vida do Jogador %d: %d/%d\n", idAlvo, vida_alvo, vida_maxima);
-
-        if (vida_alvo <= 0) {
-            printf("MORTE - Jogador %d matou o jogador %d\n", id_jogador, idAlvo);
-            estado[idAlvo] = 9;
-        }
-    }
     if (estado[idAlvo] == 2 || estado[idAlvo] == 3) {
-        printf("DEFESA - Jogador %d se defendeu do ataque do jogador %d\n", idAlvo, id_jogador);
+    printf("DEFESA - Jogador %d se defendeu do ataque do jogador %d\n", idAlvo, id_jogador);
     }
     if (estado[idAlvo] == 4) {
         printf("ERRO - Jogador %d atacou o jogador %d que estava no estado 4\n", id_jogador, idAlvo);
     }
     if (estado[idAlvo] == 9) {
     printf("ERRO - Jogador %d atacou o jogador %d que está morto!\n", id_jogador, idAlvo);
+    }
+
+    if (estado[idAlvo] == 0 || estado[idAlvo] == 1) {
+        printf("ATAQUE BEM SUCEDIDO - Jogador %d inflingiu %d de dano ao jogador %d\n", id_jogador, lista_jogs[id_jogador].dano, idAlvo);
+        lista_jogs[idAlvo].vida -= lista_jogs[id_jogador].dano;
+        printf("Vida do Jogador %d: %d/%d\n", idAlvo, lista_jogs[idAlvo].vida, vida_maxima);
+
+        if (lista_jogs[idAlvo].vida <= 0) {
+            printf("MORTE - Jogador %d matou o jogador %d\n", id_jogador, idAlvo);
+            estado[idAlvo] = 9;
+        }
     }
 }
 
@@ -194,14 +202,13 @@ void FimDefesa (int id_jogador) {
 // thread de ataque
 void * atacante (void * arg) {
     struct Passa *passado = (struct Passa *) arg;
-    struct Jogador *jogadores = passado->jogs;
     int id_jogador = passado->id_jogador;
     int id_thread = passado->id_thread;
 
     while(1) {
         int idAlvo = IniciaAtaque(id_jogador, id_thread);
         printf("Jogador %d está atacando o jogador %d\n", id_jogador, idAlvo);
-        ExecutaAtaque(id_jogador, idAlvo, jogadores[id_jogador].dano, jogadores[idAlvo].vida);
+        ExecutaAtaque(id_jogador, idAlvo);
         FimAtaque(id_jogador, idAlvo);
         sleep(1); //tempo de descanso
     } 
@@ -242,7 +249,6 @@ int main(void) {
     // cria os jogadores e seus status
     printf("Criando os jogadores e seus status\n");
     srand(time(NULL));
-    struct Jogador lista_jogs[P];
     for(int i=0; i<P; i++){
         lista_jogs[i].id_jogador = i;
         lista_jogs[i].vida = vida_minima + (rand() % (vida_maxima - vida_minima));
@@ -257,7 +263,6 @@ int main(void) {
     for(int j=0; j < P; j++) {
         for(int i=0; i < A; i++) {
             id[(j * A) + i] = (j * A) + i;
-            passas[j][i].jogs = lista_jogs;
             passas[j][i].id_jogador = j;
             passas[j][i].id_thread = (j * A) + i;
             printf("Criando thread atacante %d do jogador %d\n", (j * A) + i, j);
@@ -272,7 +277,6 @@ int main(void) {
     for(int j=0; j < P; j++) {
         for(int i=0; i < D; i++) {
             id[(A * P) + (j * D) + i] = (A * P) + (j * D) + i;
-            passas[j][A+i].jogs = lista_jogs;
             passas[j][A+i].id_jogador = j;
             passas[j][A+i].id_thread = (A * P) + (j * D) + i;
             printf("Criando thread defensora %d do jogador %d\n", (A * P) + (j * D) + i, j);
