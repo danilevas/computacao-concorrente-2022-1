@@ -26,6 +26,14 @@ PRÓXIMOS PASSOS
     - entender porque certos prints se repetem
     - implementar melhor a morte
 
+PASSOS EVENTUAIS
+    - tirar vantagens/desvantagens de jogadores por terem um certo número (começarem antes, sempre serem atacados, etc.)
+    - colocar o primeiro jogador como 1
+    - balancear os valores de vida e dano
+    - superpoder: jogador ataca 2 outros ao mesmo tempo
+    - colocar o suicídio com uma chance bem menor de acontecer (tipo um critical fail)
+    - implementar acerto crítico
+
 *REGRAS DO JOGO*
     - As threads são ações: ATAQUE / DEFESA / ESQUIVA? / DESARME?
     - Vão rolando ações de jogadores aleatórios
@@ -78,7 +86,7 @@ int IniciaAtaque (int id_jogador, int id_thread) {
     pthread_mutex_lock(&mutex);
 
     while (espera == 0) {
-        //printf("Thread de ataque do jogador %d diz: threads ativas = %d\n", id_jogador, threads_ativas);
+        // printf("Thread de ataque do jogador %d diz: threads ativas = %d\n", id_jogador, threads_ativas);
         // printf("Thread atacante %d do jogador %d BLOQUEADA\n", id_thread, id_jogador);
         pthread_cond_wait(&conds[id_jogador], &mutex);
         printf("Thread atacante %d do jogador %d LIBERADA!\n", id_thread, id_jogador);
@@ -87,7 +95,7 @@ int IniciaAtaque (int id_jogador, int id_thread) {
     // se o jogador tiver morrido dá um wait eterno
     while (estado[id_jogador] == 9) {
         pthread_cond_wait(&conds[id_jogador], &mutex);
-        //matar a thread caso o jogador morra com pthread_exit();
+        // matar a thread caso o jogador morra com pthread_exit();
     }
 
     // enquanto o jogador não estiver inativo ele não pode iniciar uma ação (ataque)
@@ -109,7 +117,7 @@ int IniciaAtaque (int id_jogador, int id_thread) {
 
     printf("Jogador %d mirou no jogador %d\n", id_jogador, idAlvo);
 
-    // while(estado[idAlvo] >= 4) {
+    // while (estado[idAlvo] >= 4) {
     //     printf("Jogador %d teve seu ataque bloqueado\n", id_jogador);
     //     pthread_cond_wait(&conds[id_jogador], &mutex);
     //     printf("Jogador %d teve seu ataque desbloqueado\n", id_jogador);
