@@ -146,15 +146,6 @@ int IniciaAtaque (int id_jogador, int id_thread) {
         // else if (vivo[idAlvo] == 0) printf("J%d queria atacar J%d mas este está morto\n", id_jogador, idAlvo);
     }
 
-    // printf("Jogador %d mirou no jogador %d\n", id_jogador, idAlvo);
-
-    // while (estado[idAlvo] >= 4) {
-    //     printf("Jogador %d teve seu ataque bloqueado\n", id_jogador);
-    //     pthread_cond_wait(&conds[id_jogador], &mutex);
-    //     printf("Jogador %d teve seu ataque desbloqueado\n", id_jogador);
-    // }
-    // está insistindo no mesmo alvo
-
     atacando++;
     estado[id_jogador] = 1;
     if (estado[idAlvo] == 2 || estado[idAlvo] == 3) estado[idAlvo]++;
@@ -362,7 +353,7 @@ int main(void) {
         }
     }
 
-    //--espera todas as threads terminarem
+    //  espera todas as threads terminarem
     for (int t=0; t<A+D; t++) {
         if (pthread_join(tid[t], NULL)) {
             printf("--ERRO: pthread_join()\n"); exit(-1); 
