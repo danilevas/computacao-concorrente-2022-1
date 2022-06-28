@@ -52,7 +52,7 @@ PASSOS EVENTUAIS
 #define A 2 // numero de threads de ataque POR JOGADOR
 #define D 2 // numero de threads de defesa POR JOGADOR
 #define D_A 2 // de quantos atacantes um defensor pode se defender ao mesmo tempo (não estou usando essa variável)
-#define P 5 // total de jogadores
+#define P 12 // total de jogadores
 
 // TEMPOS
 double tempo_defesa = 0.3;
@@ -169,6 +169,13 @@ void ExecutaAtaque (int id_jogador, int idAlvo) {
     if (estado[idAlvo] == 4) {
         printf("ERRO - J%d atacou J%d que estava no estado 4\n", id_jogador, idAlvo);
     }
+
+    // // caso o jogador tenha morrido antes de terminar o ataque, acho q nem precisa na real
+    // if (vivo[idAlvo] == 0) {
+    //   printf("J%d Notou que o J%d já estava morto e desistiu!\n", id_jogador, idAlvo);
+    //   // sleep(tempo_penalti); // penalizacao por atacar um morto, se confundiu
+    // }
+
     if (vivo[idAlvo] == 0) {
     printf("ERRO - J%d atacou J%d que está morto!\n", id_jogador, idAlvo);
     }
@@ -181,6 +188,12 @@ void ExecutaAtaque (int id_jogador, int idAlvo) {
         if (lista_jogs[idAlvo].vida <= 0) {
             printf("MORTE - J%d o=|=====> J%d\n", id_jogador, idAlvo);
             vivo[idAlvo] = 0;
+            printf("// VIVOS:\n");
+            for (int v=0; v<P; v++) {
+                if (vivo[v] == 1) {
+                    printf("// J%d\n", v);
+                }
+            }
             // printf("MORREU - vivo[J%d] = %d\n", idAlvo, vivo[idAlvo]);
         }
     }
