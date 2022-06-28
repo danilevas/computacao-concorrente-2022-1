@@ -1,7 +1,7 @@
 #include<pthread.h>
 #include<stdio.h>
 #include<stdlib.h>
-#include<unistd.h>
+#include<unistd.h>+
 #include<time.h>
 #include<math.h>
 
@@ -14,13 +14,8 @@ NOTAS SILVANA
     - pensar que o signal sinaliza a thread independente da condição que foi usada para entrar no wait
 
 PRÓXIMOS PASSOS
-    - alvos morrendo antes do atacante atacar pq outro estava atacando
-    - jogador morto termina sua última ação // acho que eu resolvi
-    - ajeitar o erro do jogador que ataca o que já está sendo atacado por 2 e que ataca quem tá morto
-    - implementar melhor a morte!!! // acho que eu resolvi
-    - JOGADORES ESTÃO ATACANDO DEPOIS DE MORREREM
-    - jogadores estão defendendo depois do jogo terminar
-    - o programa realmente terminar quando declara um vencedor
+    - ajeitar o erro do jogador que ataca o que já está sendo atacado por 2 e que ataca quem tá morto (colocar penalti)
+    - JOGADORES ESTÃO ATACANDO DEPOIS DE MORREREM DEPOIS DO JOGO TERMINAR
 
 PASSOS EVENTUAIS
     - modularizar tudo em funções
@@ -58,6 +53,7 @@ PASSOS EVENTUAIS
 double tempo_defesa = 0.3;
 // double tempo_ataque = 0.25;
 double tempo_descanso = 0.75;
+double tempo_penalti = 0.25;
 
 int vida_minima = 25; // minimo 25
 int vida_maxima = 100; // maximo 99
@@ -68,7 +64,8 @@ int dano_maximo = 50; // maximo 49
 int atacando = 0; // contador de threads atacando
 int defendendo = 0; // contador de threads defendendo
 int estado[P]; // vetor com os estados dos jogadores:
-// 0 = INATIVO // 1 = ATACANDO // 2 = EM FORMAÇÃO DE DEFESA // 3 = DEFENDENDO DE 1 // 4 = DEFENDENDO DE 2
+// 0 = INATIVO // 1 = ATACANDO // 2 = EM FORMAÇÃO DE DEFESA
+int atacado_por[P]; // por quantos jogadores um jogador está sendo atacado
 int vivo[P]; // 0 = morto // 1 = vivo
 
 int threads_ativas = 0; // MAX = (A + D) * P
