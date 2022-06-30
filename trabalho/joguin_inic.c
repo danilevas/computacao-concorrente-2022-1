@@ -54,7 +54,7 @@ SE DER TEMPO
 #define P 5 // total de jogadores
 
 // TEMPOS
-double tempo_defesa = 0.3;
+double tempo_defesa = 0.25;
 double tempo_descanso = 0.75;
 double tempo_penalti = 0.25;
 
@@ -62,6 +62,9 @@ int vida_minima = 60; // minimo 60
 int vida_maxima = 100; // maximo 99
 int dano_minimo = 15; // minimo 15
 int dano_maximo = 30; // maximo 29
+int iniciativa_max = 100;
+int agilidade_max = 100;
+int inteligencia_max = 100;
 
 // variaveis do problema
 int estado[P]; // vetor com os estados dos jogadores:
@@ -78,6 +81,9 @@ struct Jogador {
     int vida;
     int vida_original;
     int dano;
+    int iniciativa;
+    int agilidade;
+    int inteligencia;
 };
 
 // cria a struct a ser passada para as threads: a lista de jogadores mais o jogador a que a thread pertence e o id da thread
@@ -119,9 +125,9 @@ int IniciaAtaque (int id_jogador, int id_thread) {
 
     // enquanto o jogador não estiver inativo ele não pode iniciar uma ação (ataque)
     while(estado[id_jogador] != 0) {
-        // printf("J%d queria atacar com A%d mas está fazendo outra ação\n", id_jogador, id_thread);
+        printf("J%d queria atacar com A%d mas está fazendo outra ação\n", id_jogador, id_thread);
         pthread_cond_wait(&conds[id_jogador], &mutex);
-        // printf("J%d teve seu ataque A%d desbloqueado\n", id_jogador, id_thread);
+        printf("J%d teve seu ataque A%d desbloqueado\n", id_jogador, id_thread);
     }
 
     // se o jogador tiver morrido dá um wait eterno
@@ -134,15 +140,15 @@ int IniciaAtaque (int id_jogador, int id_thread) {
     int idAlvo = 0; int cont = 0;
     while(cont < 100) {
         idAlvo = rand() % P;
-        // printf("ALVO DE J%d ESCOLHIDO: J%d\n", id_jogador, idAlvo);
+        if (vivo[idAlvo] == 1) printf("ALVO DE J%d ESCOLHIDO: J%d\n", id_jogador, idAlvo);
         if((idAlvo != id_jogador) && (vivo[idAlvo] == 1) && (atacado_por[idAlvo] < 2)) break;
-        // else if (atacado_por[idAlvo] >= 2) printf("J%d queria atacar J%d mas este já está sendo atacado por 2 jogadores\n", id_jogador, idAlvo);
+        else if (atacado_por[idAlvo] >= 2) printf("J%d queria atacar J%d mas este já está sendo atacado por 2 jogadores\n", id_jogador, idAlvo);
         // else if (vivo[idAlvo] == 0) printf("J%d queria atacar J%d mas este está morto\n", id_jogador, idAlvo);
         cont++;
     }
 
     atacado_por[idAlvo]++;
-    // printf("J%d esta sendo atacado por %d jogadores - novo: J%d\n", idAlvo, atacado_por[idAlvo], id_jogador);
+    printf("J%d esta sendo atacado por %d jogadores - novo: J%d\n", idAlvo, atacado_por[idAlvo], id_jogador);
     
     estado[id_jogador] = 1;
     pthread_mutex_unlock(&mutex);
@@ -155,9 +161,9 @@ void ExecutaAtaque (int id_jogador, int idAlvo) {
 
     // se o jogador tiver morrido dá um wait eterno
     while (vivo[id_jogador] == 0) {
-        // printf("J%d caiu no wait do jogador morto\n", id_jogador);
-        atacado_por[idAlvo]--; // temos que decrementar o atacado_por!!!!!!!!!!!!!!!!!!!!!!!
-        // printf("J%d esta sendo atacado por %d jogadores - J%d MORREU\n", idAlvo, atacado_por[idAlvo], id_jogador);
+        printf("J%d caiu no wait do jogador morto\n", id_jogador);
+        atacado_por[idAlvo]--;
+        printf("J%d esta sendo atacado por %d jogadores - J%d MORREU\n", idAlvo, atacado_por[idAlvo], id_jogador);
         pthread_cond_wait(&conds[id_jogador], &mutex);
         printf("ERRO CRÍTICO - J%d MORTO ATACOU!\n", id_jogador);
     }
@@ -169,12 +175,6 @@ void ExecutaAtaque (int id_jogador, int idAlvo) {
         printf("ERRO - J%d atacou J%d que já estava sendo atacado por 2\n", id_jogador, idAlvo);
         // penalti
     }
-
-    // // caso o jogador tenha morrido antes de terminar o ataque, acho q nem precisa na real
-    // if (vivo[idAlvo] == 0) {
-    //   printf("J%d Notou que o J%d já estava morto e desistiu!\n", id_jogador, idAlvo);
-    //   // sleep(tempo_penalti); // penalizacao por atacar um morto, se confundiu
-    // }
 
     if (vivo[idAlvo] == 0) {
     printf("ERRO - J%d atacou J%d que está morto!\n", id_jogador, idAlvo);
@@ -202,9 +202,9 @@ void ExecutaAtaque (int id_jogador, int idAlvo) {
 
 void FimAtaque (int id_jogador, int idAlvo) {
     pthread_mutex_lock(&mutex);
-    // printf("J%d terminou de atacar\n", id_jogador);
+    printf("J%d terminou de atacar\n", id_jogador);
     atacado_por[idAlvo]--;
-    // printf("J%d esta sendo atacado por %d jogadores\n", idAlvo, atacado_por[idAlvo]);
+    printf("J%d esta sendo atacado por %d jogadores\n", idAlvo, atacado_por[idAlvo]);
     estado[id_jogador] = 0;
 
     acabou();
@@ -226,9 +226,9 @@ void IniciaDefesa (int id_jogador, int id_thread) {
 
     // enquanto o jogador não estiver inativo ele não pode iniciar uma ação (defesa)
     while(estado[id_jogador] != 0) {
-        // printf("J%d queria defender com D%d mas está fazendo outra ação\n", id_jogador, id_thread);
+        printf("J%d queria defender com D%d mas está fazendo outra ação\n", id_jogador, id_thread);
         pthread_cond_wait(&conds[id_jogador], &mutex);
-        // printf("J%d teve sua defesa D%d desbloqueada\n", id_jogador, id_thread);
+        printf("J%d teve sua defesa D%d desbloqueada\n", id_jogador, id_thread);
     }
 
     // se o jogador tiver morrido dá um wait eterno
@@ -237,7 +237,7 @@ void IniciaDefesa (int id_jogador, int id_thread) {
         printf("ERRO CRÍTICO - J%d MORTO DEFENDEU!\n", id_jogador);
     }
 
-    // printf("J%d quer defender\n", id_jogador);
+    printf("J%d quer defender\n", id_jogador);
     estado[id_jogador] = 2;
     pthread_mutex_unlock(&mutex);
 }
@@ -262,7 +262,7 @@ void * atacante (void * arg) {
 
     while(1) {
         while (vivo[id_jogador] == 0) {
-            // printf("J%d caiu no wait\n", id_jogador);
+            printf("J%d caiu no wait\n", id_jogador);
             pthread_cond_wait(&conds[id_jogador], &mutex);
             printf("ERRO CRÍTICO - J%d MORTO ATACOU!\n", id_jogador);
         }
@@ -273,7 +273,7 @@ void * atacante (void * arg) {
             break;
         }
         else {
-            // printf("J%d está atacando J%d\n", id_jogador, idAlvo);
+            printf("J%d está atacando J%d\n", id_jogador, idAlvo);
         }
         ExecutaAtaque(id_jogador, idAlvo);
         FimAtaque(id_jogador, idAlvo);
@@ -329,10 +329,14 @@ int main(void) {
         lista_jogs[i].vida = vida_minima + (rand() % (vida_maxima - vida_minima));
         lista_jogs[i].vida_original = lista_jogs[i].vida;
         lista_jogs[i].dano = dano_minimo + (rand() % (dano_maximo - dano_minimo));
+        lista_jogs[i].iniciativa = rand() % iniciativa_max;
+        lista_jogs[i].agilidade = rand() % agilidade_max;
+        lista_jogs[i].inteligencia = rand() % inteligencia_max;
         estado[i] = 0;
         vivo[i] = 1;
         atacado_por[i] = 0;
-        printf("Jogador %d criado com (%d/%d) de vida e %d de dano\n", i, lista_jogs[i].vida, vida_maxima, lista_jogs[i].dano);
+        printf("Jogador %d criado com VIDA: (%d/%d) / DANO: %d / INICIATIVA: %d / AGILIDADE: %d / INTELIGÊNCIA: %d\n",
+             i, lista_jogs[i].vida, vida_maxima, lista_jogs[i].dano, lista_jogs[i].iniciativa, lista_jogs[i].agilidade, lista_jogs[i].inteligencia);
     }
 
     struct Passa passas[P][A+D];
@@ -364,12 +368,28 @@ int main(void) {
             //printf("Thread defensora %d criada\n", (A * P) + (j * D) + i);
         }
     }
-    
+
+    // criando uma lista das iniciativas para sabermos quem começa primeiro
+    int ordem[P];
+    int maior = 0; int maior_ind = 0; int j = 0; int limite_max = iniciativa_max + 1;
+    for (int i = 0; i < P; i++) {
+        maior = 0;
+        maior_ind = 0;
+        for (j = 0; j < P; j++) {
+            if (lista_jogs[j].iniciativa > maior && lista_jogs[j].iniciativa < limite_max) {
+                maior = lista_jogs[j].iniciativa;
+                maior_ind = j;
+            }
+        }
+        ordem[i] = maior_ind;
+        limite_max = maior;
+    }
+
     sleep(0.25);
     if (espera == 1) {
-        for(int jogador=0; jogador < P; jogador++) {
-        printf("Threads do J%d liberadas!\n", jogador);
-        pthread_cond_signal(&conds[jogador]);
+        for (int pos=0; pos < P; pos++) {
+        printf("Threads do J%d liberadas!\n", ordem[pos]);
+        pthread_cond_signal(&conds[ordem[pos]]);
         }
     }
 
