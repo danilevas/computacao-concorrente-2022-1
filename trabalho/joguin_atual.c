@@ -4,6 +4,7 @@
 #include<unistd.h>
 #include<time.h>
 #include<math.h>
+#include "nomes.h"
 
 /*
 NOTAS SILVANA
@@ -13,8 +14,10 @@ NOTAS SILVANA
     - se ligar nas condições para as threads se bloquearem e só der signal quando de fato as condições mudarem
     - pensar que o signal sinaliza a thread independente da condição que foi usada para entrar no wait
 
+ERROS
+    - na hora do sleep do desarme, não é só a thread desarmada que para, mas todas
+
 PRÓXIMOS PASSOS
-    - colocar nomes e descrições para os jogadores
     - elaborar desenhos legais e compreensíveis
     - balancear os valores de vida e dano, e os tempos // ir testando bastante
     - implementar novas ações
@@ -31,7 +34,7 @@ SE DER TEMPO
     - o jogo ser um jogo de apostas!!!!! Com nomes e descrições de cada jogador e stats pra apostar
 
 *REGRAS DO JOGO*
-    - As threads são ações: ATAQUE / DEFESA / ESQUIVA? / DESARME?
+    - As threads são ações: ATAQUE / DEFESA / ESQUIVA / DESARME
     - Vão rolando ações de jogadores aleatórios
         * Ataques contra outros jogadores (duram 0.25 segundos)
         * Defesas (duram 1 segundo)
@@ -47,10 +50,10 @@ SE DER TEMPO
 #define P 5 // total de jogadores
 
 // TEMPOS
-double tempo_defesa = 0.5;
-double tempo_descanso = 0.25;
-double tempo_penalti = 0.5;
-double tempo_acrescimo = 0.75;
+double tempo_defesa = 1.5;
+double tempo_descanso = 1.25;
+double tempo_penalti = 1.5;
+double tempo_acrescimo = 1.25;
 
 int vida_minima = 60; // minimo 60
 int vida_maxima = 100; // maximo 99
@@ -74,6 +77,8 @@ int acabado = 0;
 
 struct Jogador {
     int id_jogador;
+    char nome[50];
+    char descricao[100];
     int vida;
     int vida_original;
     int dano;
@@ -106,7 +111,7 @@ void acabou () {
     }
     if (mortos == P - 1) {
         acabado = 1;
-        printf("----- ACABOU O JOGO - J%d É O GRANDE VENCEDOR -----\n", o_vivo);
+        printf("----- ACABOU O JOGO - %s (J%d) É O GRANDE VENCEDOR -----\n", lista_jogs[o_vivo].nome, o_vivo);
         // printar se a pessoa acertou a aposta ou nao
         exit(0);
     }
@@ -131,7 +136,7 @@ int IniciaAtaque (int id_jogador, int id_thread) {
     // se o jogador tiver morrido dá um wait eterno
     while (vivo[id_jogador] == 0) {
         pthread_cond_wait(&conds[id_jogador], &mutex);
-        printf("ERRO CRÍTICO - J%d MORTO ATACOU!\n", id_jogador);
+        printf("ERRO CRÍTICO - %s (J%d) MORTO ATACOU!\n", lista_jogs[id_jogador].nome, id_jogador);
     }
 
     // escolha do alvo
@@ -167,15 +172,15 @@ int ExecutaAtaque (int id_jogador, int idAlvo) {
     }
 
     if (estado[idAlvo] == 2) {
-    printf("J%d SE DEFENDEU DE J%d | J%d ) <=====|=o J%d\n", idAlvo, id_jogador, idAlvo, id_jogador);
+    printf("%s (J%d) SE DEFENDEU DE %s (J%d) | J%d ) <=====|=o J%d\n",lista_jogs[idAlvo].nome, idAlvo, lista_jogs[id_jogador].nome, id_jogador, idAlvo, id_jogador);
     }
     if (atacado_por[idAlvo] > 2) {
-        printf("J%d ERROU, ATACOU J%d QUE JÁ ESTAVA SENDO ATACADO POR 2!\n", id_jogador, idAlvo);
+        printf("%s (J%d) ERROU, ATACOU %s (J%d) QUE JÁ ESTAVA SENDO ATACADO POR 2!\n", lista_jogs[id_jogador].nome, id_jogador, lista_jogs[idAlvo].nome, idAlvo);
         sleep(tempo_penalti); // penalti
     }
 
     if (vivo[idAlvo] == 0) {
-    printf("J%d ERROU, ATACOU J%d QUE ESTÁ MORTO!\n", id_jogador, idAlvo);
+    printf("%s (J%d) ERROU, ATACOU %s (J%d) QUE ESTÁ MORTO!\n", lista_jogs[id_jogador].nome, id_jogador, lista_jogs[idAlvo].nome, idAlvo);
     sleep(tempo_penalti); // penalti
     }
 
@@ -186,31 +191,33 @@ int ExecutaAtaque (int id_jogador, int idAlvo) {
     }
     else {
         esquivou = 1; // esquivou
-        printf("***** J%d ESQUIVOU DO ATAQUE DE J%d\n", idAlvo, id_jogador);
+        printf("***** %s (J%d) ESQUIVOU DO ATAQUE DE %s (J%d)\n", lista_jogs[idAlvo].nome, idAlvo, lista_jogs[id_jogador].nome, id_jogador);
     }
 
-    int metrica_desarme = rand() % 1000; int desarmou = 0;
+    int metrica_desarme = rand() % 200; int desarmou = 0;
     // (int)(agilidade_max/(chance_maxima_esq/100));
     if (metrica_desarme > lista_jogs[idAlvo].inteligencia || estado[idAlvo] == 2) {
         desarmou = 0; // não desarmou
     }
     else {
         desarmou = 1; // desarmou
-        printf("$$$$$ J%d DESARMOU J%d\n", idAlvo, id_jogador);
+        printf("$$$$$ %s (J%d) DESARMOU %s (J%d)\n", lista_jogs[idAlvo].nome, idAlvo, lista_jogs[id_jogador].nome, id_jogador);
     }
 
     if ((estado[idAlvo] == 0 || estado[idAlvo] == 1) && vivo[idAlvo] != 0 && atacado_por[idAlvo] <= 2 && esquivou == 0 && desarmou == 0) {
-        printf("J%d ATINGIU J%d | J%d o=|=====> J%d (%dD)\n", id_jogador, idAlvo, id_jogador, idAlvo, lista_jogs[id_jogador].dano);
+        printf("%s (J%d) ATINGIU %s (J%d) | J%d o=|=====> J%d (%dD)\n",
+            lista_jogs[id_jogador].nome, id_jogador, lista_jogs[idAlvo].nome, idAlvo, id_jogador, idAlvo, lista_jogs[id_jogador].dano);
+
         lista_jogs[idAlvo].vida -= lista_jogs[id_jogador].dano;
-        printf("VIDA DE J%d: (%d/%d)\n", idAlvo, lista_jogs[idAlvo].vida, lista_jogs[idAlvo].vida_original);
+        printf("VIDA DE %s (J%d): (%d/%d)\n", lista_jogs[idAlvo].nome, idAlvo, lista_jogs[idAlvo].vida, lista_jogs[idAlvo].vida_original);
 
         if (lista_jogs[idAlvo].vida <= 0) {
-            printf("J%d MORREU | J%d o=|=====> J%d\n", idAlvo, id_jogador, idAlvo);
+            printf("%s (J%d) MORREU | J%d o=|=====> J%d\n", lista_jogs[idAlvo].nome, idAlvo, id_jogador, idAlvo);
             vivo[idAlvo] = 0;
             printf("// VIVOS:\n");
             for (int v=0; v<P; v++) {
                 if (vivo[v] == 1) {
-                    printf("// J%d\n", v);
+                    printf("// %s (J%d)\n", lista_jogs[v].nome, v);
                 }
             }
         }
@@ -228,9 +235,11 @@ void FimAtaque (int id_jogador, int idAlvo, int desarmou) {
 
     acabou();
 
-    sleep(tempo_descanso); //tempo de descanso
     if (desarmou == 1) {
-        sleep(tempo_acrescimo);
+        sleep(tempo_acrescimo + tempo_descanso); //tempo de descanso extra para quem foi desarmado
+    }
+    else {
+        sleep(tempo_descanso); //tempo de descanso
     }
     pthread_cond_signal(&conds[id_jogador]);
     pthread_cond_wait(&conds[id_jogador], &mutex);
@@ -270,7 +279,7 @@ void IniciaDefesa (int id_jogador, int id_thread) {
 
 void FimDefesa (int id_jogador) {
     pthread_mutex_lock(&mutex);
-    printf("J%d ABAIXOU O ESCUDO\n", id_jogador);
+    printf("%s (J%d) ABAIXOU O ESCUDO\n", lista_jogs[id_jogador].nome, id_jogador);
     estado[id_jogador] = 0;
 
     // acabou();
@@ -327,7 +336,7 @@ void * defensor (void * arg) {
             break;
         }
         IniciaDefesa(id_jogador, id_thread);
-        printf("J%d LEVANTOU O ESCUDO\n", id_jogador);
+        printf("%s (J%d) LEVANTOU O ESCUDO\n", lista_jogs[id_jogador].nome, id_jogador);
         sleep(tempo_defesa); //tempo de defesa
         FimDefesa(id_jogador);
     } 
@@ -350,10 +359,12 @@ int main(void) {
     srand(time(NULL));
 
     // cria os jogadores e seus status
-    printf("Criando os jogadores e seus status\n");
+    printf("Criando os jogadores e seus status\n\n");
     srand(time(NULL));
     for(int i=0; i<P; i++){
         lista_jogs[i].id_jogador = i;
+        geraNome(lista_jogs[i].nome);
+        geraDesc(lista_jogs[i].descricao);
         lista_jogs[i].vida = vida_minima + (rand() % (vida_maxima - vida_minima));
         lista_jogs[i].vida_original = lista_jogs[i].vida;
         lista_jogs[i].dano = dano_minimo + (rand() % (dano_maximo - dano_minimo));
@@ -363,8 +374,11 @@ int main(void) {
         estado[i] = 0;
         vivo[i] = 1;
         atacado_por[i] = 0;
-        printf("Jogador %d criado com VIDA: (%d/%d) / DANO: %d / INICIATIVA: %d / AGILIDADE: %d / INTELIGÊNCIA: %d\n",
-             i, lista_jogs[i].vida, vida_maxima, lista_jogs[i].dano, lista_jogs[i].iniciativa, lista_jogs[i].agilidade, lista_jogs[i].inteligencia);
+        printf("Jogador/a %d: ", i);
+        puts(lista_jogs[i].nome);
+        puts(lista_jogs[i].descricao);
+        printf("VIDA: (%d/%d) / DANO: %d / INICIATIVA: %d / AGILIDADE: %d / INTELIGÊNCIA: %d\n\n",
+            lista_jogs[i].vida, vida_maxima, lista_jogs[i].dano, lista_jogs[i].iniciativa, lista_jogs[i].agilidade, lista_jogs[i].inteligencia);
     }
 
     struct Passa passas[P][A+D];
@@ -421,7 +435,7 @@ int main(void) {
     sleep(0.25);
     if (espera == 1) {
         for (int pos=0; pos < P; pos++) {
-        printf("Threads do J%d liberadas!\n", ordem[pos]);
+        printf("Threads de %s (J%d) liberadas!\n", lista_jogs[ordem[pos]].nome, ordem[pos]);
         pthread_cond_signal(&conds[ordem[pos]]);
         }
     }
