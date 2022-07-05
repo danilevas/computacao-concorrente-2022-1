@@ -7,7 +7,7 @@
 #include<math.h>
 
 void geraNome(char nome[]) {
-    char nomes[16][20];
+    char nomes[22][20];
     strcpy(nomes[0], "Joel");
     strcpy(nomes[1], "Maria");
     strcpy(nomes[2], "Jorginho");
@@ -24,8 +24,14 @@ void geraNome(char nome[]) {
     strcpy(nomes[13], "Ada");
     strcpy(nomes[14], "Úrsula");
     strcpy(nomes[15], "Janderson");
+    strcpy(nomes[16], "Clonifer");
+    strcpy(nomes[17], "Kenderson");
+    strcpy(nomes[18], "Sílvio");
+    strcpy(nomes[19], "Thiaguinho");
+    strcpy(nomes[20], "Leia");
+    strcpy(nomes[21], "Klebinho");
 
-    char titulos[13][20];
+    char titulos[27][50];
     strcpy(titulos[0], "O Bárbaro");
     strcpy(titulos[1], "A Destruidora");
     strcpy(titulos[2], "O Pequeno");
@@ -39,15 +45,29 @@ void geraNome(char nome[]) {
     strcpy(titulos[10], "O Raio");
     strcpy(titulos[11], "A Lagartixa");
     strcpy(titulos[12], "O Imbatível");
+    strcpy(titulos[13], "A Irreconhecível");
+    strcpy(titulos[14], "O Imperdoável");
+    strcpy(titulos[15], "O Ceifador");
+    strcpy(titulos[16], "A Adesiva");
+    strcpy(titulos[17], "A Insana");
+    strcpy(titulos[18], "O Desregulado");
+    strcpy(titulos[19], "A Metralhadora");
+    strcpy(titulos[20], "O Ilusionista");
+    strcpy(titulos[21], "O Imperdível");
+    strcpy(titulos[22], "A Onça");
+    strcpy(titulos[23], "O Capanga");
+    strcpy(titulos[24], "A Coordenada");
+    strcpy(titulos[25], "O GPS Humano");
+    strcpy(titulos[26], "A Montanha de Ferro");
 
-    strcpy(nome, nomes[rand() % 16]);
+    strcpy(nome, nomes[rand() % 22]);
     strcat(nome, ", ");
-    strcat(nome, titulos[rand() % 13]);
+    strcat(nome, titulos[rand() % 27]);
 }
 
 void geraDesc(char descricao[]) {
-    char desc[100] = "Vindo/a de uma família de ";
-    char familia[9][100];
+    char desc[200] = "Vindo/a de uma família de ";
+    char familia[10][200];
     strcpy(familia[0], "alfaiates ");
     strcpy(familia[1], "guerreiros ");
     strcpy(familia[2], "padeiros ");
@@ -57,10 +77,11 @@ void geraDesc(char descricao[]) {
     strcpy(familia[6], "assassinos ");
     strcpy(familia[7], "fazendeiros ");
     strcpy(familia[8], "padres ");
+    strcpy(familia[9], "piratas ");
 
-    strcat(desc, familia[rand() % 9]);
+    strcat(desc, familia[rand() % 10]);
 
-    char lugar[8][100];
+    char lugar[8][200];
     strcpy(lugar[0], "das planícies");
     strcpy(lugar[1], "das montanhas");
     strcpy(lugar[2], "das florestas");
