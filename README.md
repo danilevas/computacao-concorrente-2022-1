@@ -2,7 +2,7 @@
 
 Este repositório contém os trabalhos desenvolvidos durante a disciplina de **Computação Concorrente** do Curso de Ciência da Computação da UFRJ, cursada em 2022.1. Durante o curso, foram explorados conceitos fundamentais de concorrência, sincronização e comunicação entre threads, utilizando a linguagem C com as bibliotecas **pthreads** e **semaphore**.
 
-## 🧵 Conceitos e Implementações
+## 🧠 Conceitos e Implementações
 
 Ao longo da disciplina, foram implementadas diversas abordagens de programação concorrente, incluindo:
 
@@ -15,7 +15,7 @@ Ao longo da disciplina, foram implementadas diversas abordagens de programação
 
 O projeto final da disciplina consistiu no jogo **Corrente do Poder**, um jogo de apostas e combate totalmente concorrente. O jogador deve escolher um dos cinco personagens e torcer para que ele seja o último sobrevivente na arena.
 
-### 🔥 Mecânica do Jogo
+### Mecânica do Jogo
 
 - Cinco personagens lutam em uma arena, cada um com atributos individuais: **vida, dano, iniciativa, agilidade e inteligência**.
 - Cada personagem possui **duas threads de ataque** e **uma thread de defesa**, garantindo um ambiente altamente concorrente.
@@ -23,7 +23,7 @@ O projeto final da disciplina consistiu no jogo **Corrente do Poder**, um jogo d
 - Durante a luta, os personagens podem executar ações de **ataque, defesa, esquiva e desarme**, todas coordenadas por threads independentes.
 - A luta continua até restar apenas um personagem vivo, declarando o vencedor.
 
-### 🛠️ Implementação Concorrente
+### Implementação Concorrente
 
 - **Controle de ações**: Mutexes e variáveis de condição garantem que as threads sigam a lógica de jogo corretamente.
 - **Escolha de alvos**: Cada personagem escolhe alvos de ataque dinamicamente, evitando ataques inválidos.
